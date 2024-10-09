@@ -23,6 +23,7 @@ import {
   MapViewState,
 } from '@deck.gl/core';
 import { parse } from '@loaders.gl/core';
+import { Matrix4 } from '@math.gl/core';
 
 // Add these new imports
 import {
@@ -37,6 +38,7 @@ import {
   Toolbar,
   Typography,
   Box,
+  Slider,
 } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
@@ -100,6 +102,13 @@ export function Example() {
   // Add new state for saved feature lists
   const [savedFeatureLists, setSavedFeatureLists] =
     useState<string[]>([]);
+
+  // Add new state for rotation angles
+  const [rotation, setRotation] = useState({
+    x: 0,
+    y: 0,
+    z: 0,
+  });
 
   // Load saved feature lists from local storage on component mount
   useEffect(() => {
@@ -217,6 +226,10 @@ export function Example() {
           139.7654711623127, 35.830900143089295, 0,
         ],
         coordinateSystem: COORDINATE_SYSTEM.METER_OFFSETS,
+        modelMatrix: new Matrix4()
+          .rotateX((rotation.x * Math.PI) / 180)
+          .rotateY((rotation.y * Math.PI) / 180)
+          .rotateZ((rotation.z * Math.PI) / 180),
       }),
   ];
 
@@ -307,6 +320,16 @@ export function Example() {
     setSavedFeatureLists([]);
     localStorage.removeItem('savedFeatureLists');
   };
+
+  // Add a function to handle rotation changes
+  const handleRotationChange =
+    (axis: 'x' | 'y' | 'z') =>
+    (event: Event, newValue: number | number[]) => {
+      setRotation((prev) => ({
+        ...prev,
+        [axis]: newValue as number,
+      }));
+    };
 
   return (
     <>
@@ -480,6 +503,43 @@ export function Example() {
           left: '20px',
         }}
       />
+
+      {/* Add rotation controls */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '20px',
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+          padding: '10px',
+          borderRadius: '5px',
+        }}
+      >
+        <Typography gutterBottom>Rotate X</Typography>
+        <Slider
+          value={rotation.x}
+          onChange={handleRotationChange('x')}
+          min={0}
+          max={360}
+          valueLabelDisplay='auto'
+        />
+        <Typography gutterBottom>Rotate Y</Typography>
+        <Slider
+          value={rotation.y}
+          onChange={handleRotationChange('y')}
+          min={0}
+          max={360}
+          valueLabelDisplay='auto'
+        />
+        <Typography gutterBottom>Rotate Z</Typography>
+        <Slider
+          value={rotation.z}
+          onChange={handleRotationChange('z')}
+          min={0}
+          max={360}
+          valueLabelDisplay='auto'
+        />
+      </Box>
     </>
   );
 }
