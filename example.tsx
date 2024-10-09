@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
 import DeckGL from '@deck.gl/react';
 import {
   ViewMode,
@@ -14,7 +18,10 @@ import {
   LASLoader,
   LASWorkerLoader,
 } from '@loaders.gl/las';
-import { COORDINATE_SYSTEM } from '@deck.gl/core';
+import {
+  COORDINATE_SYSTEM,
+  MapViewState,
+} from '@deck.gl/core';
 import { parse } from '@loaders.gl/core';
 
 // Add these new imports
@@ -102,6 +109,27 @@ export function Example() {
     if (savedLists) {
       setSavedFeatureLists(JSON.parse(savedLists));
     }
+  }, []);
+
+  const [viewState, setViewState] = useState<MapViewState>({
+    ...initialViewState,
+    bearing: 0,
+    pitch: 0,
+  });
+
+  // Add this useEffect to reset the bearing when switching out of view mode
+  useEffect(() => {
+    if (mode !== ViewMode) {
+      setViewState((prevState) => ({
+        ...prevState,
+        bearing: 0,
+        pitch: 0,
+      }));
+    }
+  }, [mode]);
+
+  const onViewStateChange = useCallback(({ viewState }) => {
+    setViewState(viewState);
   }, []);
 
   const layer = new EditableGeoJsonLayer({
@@ -283,25 +311,23 @@ export function Example() {
   return (
     <>
       <DeckGL
-        initialViewState={initialViewState}
+        viewState={viewState}
         controller={{
           doubleClickZoom: false,
-          dragRotate: false,
-          touchRotate: false,
+          dragRotate: mode === ViewMode,
+          touchRotate: mode === ViewMode,
         }}
+        onViewStateChange={onViewStateChange}
         layers={[layer, ...layers]}
         getCursor={layer.getCursor.bind(layer)}
         onClick={(info) => {
-          // console.log(info);
-          if (mode === ViewMode)
+          if (mode === ViewMode) {
             if (info) {
               setSelectedFeatureIndexes([info.index]);
             } else {
               setSelectedFeatureIndexes([]);
             }
-        }}
-        onViewStateChange={(info) => {
-          // console.log(info);
+          }
         }}
       >
         <StaticMap
