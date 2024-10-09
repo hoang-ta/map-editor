@@ -23,6 +23,10 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
+  Drawer,
+  AppBar,
+  Toolbar,
+  Typography,
 } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
@@ -56,6 +60,9 @@ export function Example() {
   const [historyIndex, setHistoryIndex] = useState(0);
   // console.log('history', history);
   // console.log('historyIndex', historyIndex);
+
+  // Add this new state variable
+  const [drawerOpen, setDrawerOpen] = useState(true);
 
   const layer = new EditableGeoJsonLayer({
     data: geoJson,
@@ -178,41 +185,51 @@ export function Example() {
         />
       </DeckGL>
 
-      {/* Add undo/redo buttons */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
+      {/* Add the drawer */}
+      <Drawer
+        anchor='right'
+        variant='persistent'
+        open={drawerOpen}
+        sx={{
+          width: 300,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: 300,
+            boxSizing: 'border-box',
+          },
         }}
       >
-        <Button
-          onClick={handleUndo}
-          disabled={historyIndex === 0}
+        <AppBar position='static'>
+          <Toolbar>
+            <Typography
+              variant='h6'
+              component='div'
+              sx={{ flexGrow: 1 }}
+            >
+              Shapes
+            </Typography>
+            <Button
+              color='inherit'
+              onClick={handleUndo}
+              disabled={historyIndex === 0}
+            >
+              <UndoIcon />
+            </Button>
+            <Button
+              color='inherit'
+              onClick={handleRedo}
+              disabled={historyIndex === history.length - 1}
+            >
+              <RedoIcon />
+            </Button>
+          </Toolbar>
+        </AppBar>
+        <List
+          sx={{
+            overflow: 'auto',
+            maxHeight: 'calc(100% - 64px)',
+          }}
         >
-          <UndoIcon />
-        </Button>
-        <Button
-          onClick={handleRedo}
-          disabled={historyIndex === history.length - 1}
-        >
-          <RedoIcon />
-        </Button>
-      </div>
-
-      {/* Add shape list UI */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          width: '250px',
-          backgroundColor: 'white',
-          padding: '10px',
-          borderRadius: '5px',
-        }}
-      >
-        <List>
           {geoJson.features.map((feature, index) => (
             <ListItem key={index}>
               <ListItemText
@@ -230,7 +247,7 @@ export function Example() {
             </ListItem>
           ))}
         </List>
-      </div>
+      </Drawer>
 
       <Toolbox
         left={true}
