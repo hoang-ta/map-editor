@@ -3,6 +3,8 @@ import DeckGL from '@deck.gl/react';
 import {
   ViewMode,
   EditableGeoJsonLayer,
+  DrawCircleFromCenterMode,
+  DrawRectangleMode,
 } from '@deck.gl-community/editable-layers';
 import { Toolbox } from './toolbox/toolbox';
 import StaticMap from 'react-map-gl/maplibre';
@@ -35,6 +37,26 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import LoadIcon from '@mui/icons-material/Refresh';
 import ClearIcon from '@mui/icons-material/Clear';
+
+// Add this new import
+import { v4 as uuidv4 } from 'uuid';
+
+// Update the getShapeName function
+function getShapeName(feature: any): string {
+  if (feature.properties && feature.properties.shapeType) {
+    return feature.properties.shapeType;
+  }
+  switch (feature.geometry.type) {
+    case 'Point':
+      return 'Point';
+    case 'LineString':
+      return 'Line';
+    case 'Polygon':
+      return 'Polygon';
+    default:
+      return 'Shape';
+  }
+}
 
 const initialViewState = {
   longitude: 139.7654711623127,
@@ -87,8 +109,61 @@ export function Example() {
     mode,
     modeConfig,
     selectedFeatureIndexes,
-    onEdit: ({ updatedData, editType }) => {
-      console.log('updatedData', updatedData, editType);
+    onEdit: ({
+      updatedData,
+      editType,
+      featureIndexes,
+      editContext,
+    }) => {
+      // console.log(
+      //   mode,
+      //   mode.name,
+      //   DrawCircleFromCenterMode.name
+      // );
+      // console.log(
+      //   'updatedData',
+      //   updatedData,
+      //   editType,
+      //   featureIndexes,
+      //   editContext
+      // );
+
+      // Add shapeType and id properties to new features
+      if (editType === 'addFeature') {
+        const newFeatures = updatedData.features.map(
+          (feature, index) => {
+            if (
+              editContext?.featureIndexes?.includes(index)
+            ) {
+              let shapeType = getShapeName(feature);
+              console.log('shapeType', shapeType);
+              if (
+                mode.name === DrawCircleFromCenterMode.name
+              ) {
+                shapeType = 'Circle';
+              } else if (
+                mode.name === DrawRectangleMode.name
+              ) {
+                shapeType = 'Rectangle';
+              }
+              return {
+                ...feature,
+                properties: {
+                  ...feature.properties,
+                  id: uuidv4(),
+                  shapeType,
+                },
+              };
+            }
+            return feature;
+          }
+        );
+        updatedData = {
+          ...updatedData,
+          features: newFeatures,
+        };
+      }
+
       setGeoJson(updatedData);
 
       // Only update history when the edit is finished
@@ -313,9 +388,11 @@ export function Example() {
           }}
         >
           {geoJson.features.map((feature, index) => (
-            <ListItem key={index}>
+            <ListItem key={feature.properties?.id || index}>
               <ListItemText
-                primary={`Shape ${index + 1}`}
+                primary={`${getShapeName(feature)} ${
+                  index + 1
+                }`}
               />
               <ListItemSecondaryAction>
                 <IconButton

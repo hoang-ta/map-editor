@@ -193,6 +193,7 @@ function ModeGroupButtons({
         buttonConfig={buttonConfig}
         mode={mode}
         onClick={() => {
+          // console.log(buttonConfig);
           onSetMode(() => buttonConfig.mode);
           setExpanded(true);
         }}
