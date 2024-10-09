@@ -393,6 +393,8 @@ export function Example() {
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 1,
               }}
             >
               <Button
@@ -427,6 +429,15 @@ export function Example() {
               >
                 <ClearIcon fontSize='small' />
               </Button>
+            </Box>
+            {/* Add the file input below the icons */}
+            <Box sx={{ width: '100%', mt: 1 }}>
+              <input
+                type='file'
+                accept='.laz,.las'
+                onChange={handleFileUpload}
+                style={{ width: '100%' }}
+              />
             </Box>
           </Toolbar>
         </AppBar>
@@ -491,17 +502,6 @@ export function Example() {
           })
         }
         onSetGeoJson={setGeoJson}
-      />
-
-      <input
-        type='file'
-        accept='.laz,.las'
-        onChange={handleFileUpload}
-        style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '20px',
-        }}
       />
 
       {/* Add rotation controls */}
