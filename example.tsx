@@ -2,6 +2,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
 } from 'react';
 import DeckGL from '@deck.gl/react';
 import {
@@ -75,8 +76,9 @@ const initialViewState = {
 };
 
 // Data source: kaarta.com
-const LAZ_SAMPLE = 'http://127.0.0.1:5500/indoor.0.1.laz';
-// 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/point-cloud-laz/indoor.0.1.laz';
+// const LAZ_SAMPLE = 'http://127.0.0.1:5500/indoor.0.1.laz';
+const LAZ_SAMPLE =
+  'https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/point-cloud-laz/indoor.0.1.laz';
 
 type LASMesh = (typeof LASWorkerLoader)['dataType'];
 
@@ -173,7 +175,7 @@ export function Example() {
               editContext?.featureIndexes?.includes(index)
             ) {
               let shapeType = getShapeName(feature);
-              console.log('shapeType', shapeType);
+              // console.log('shapeType', shapeType);
               if (
                 mode.name === DrawCircleFromCenterMode.name
               ) {
@@ -232,6 +234,8 @@ export function Example() {
           .rotateZ((rotation.z * Math.PI) / 180),
       }),
   ];
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -330,6 +334,14 @@ export function Example() {
         [axis]: newValue as number,
       }));
     };
+
+  const clearPCDData = () => {
+    setPcd(null);
+    // Clear the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   return (
     <>
@@ -437,7 +449,11 @@ export function Example() {
                 accept='.laz,.las'
                 onChange={handleFileUpload}
                 style={{ width: '100%' }}
+                ref={fileInputRef}
               />
+              <button onClick={clearPCDData}>
+                Clear PCD Data
+              </button>
             </Box>
           </Toolbar>
         </AppBar>
