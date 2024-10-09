@@ -27,10 +27,14 @@ import {
   AppBar,
   Toolbar,
   Typography,
+  Box,
 } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SaveIcon from '@mui/icons-material/Save';
+import LoadIcon from '@mui/icons-material/Refresh';
+import ClearIcon from '@mui/icons-material/Clear';
 
 const initialViewState = {
   longitude: 139.7654711623127,
@@ -63,6 +67,20 @@ export function Example() {
 
   // Add this new state variable
   const [drawerOpen, setDrawerOpen] = useState(true);
+
+  // Add new state for saved feature lists
+  const [savedFeatureLists, setSavedFeatureLists] =
+    useState<string[]>([]);
+
+  // Load saved feature lists from local storage on component mount
+  useEffect(() => {
+    const savedLists = localStorage.getItem(
+      'savedFeatureLists'
+    );
+    if (savedLists) {
+      setSavedFeatureLists(JSON.parse(savedLists));
+    }
+  }, []);
 
   const layer = new EditableGeoJsonLayer({
     data: geoJson,
@@ -154,6 +172,39 @@ export function Example() {
     setHistoryIndex(newHistory.length - 1);
   };
 
+  // Function to save current features to local storage
+  const saveFeatureList = () => {
+    const newList = JSON.stringify(geoJson.features);
+    const updatedLists = [...savedFeatureLists, newList];
+    setSavedFeatureLists(updatedLists);
+    localStorage.setItem(
+      'savedFeatureLists',
+      JSON.stringify(updatedLists)
+    );
+  };
+
+  // Function to load a saved feature list
+  const loadFeatureList = (index: number) => {
+    const loadedFeatures = JSON.parse(
+      savedFeatureLists[index]
+    );
+    setGeoJson({ ...geoJson, features: loadedFeatures });
+
+    // Update history
+    const newHistory = [
+      ...history,
+      { ...geoJson, features: loadedFeatures },
+    ];
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // Add this new function to clear saved feature lists
+  const clearSavedFeatureLists = () => {
+    setSavedFeatureLists([]);
+    localStorage.removeItem('savedFeatureLists');
+  };
+
   return (
     <>
       <DeckGL
@@ -200,28 +251,59 @@ export function Example() {
         }}
       >
         <AppBar position='static'>
-          <Toolbar>
+          <Toolbar
+            sx={{
+              flexDirection: 'column',
+              alignItems: 'stretch',
+              py: 1,
+            }}
+          >
             <Typography
               variant='h6'
               component='div'
-              sx={{ flexGrow: 1 }}
+              sx={{ mb: 1 }}
             >
               Shapes
             </Typography>
-            <Button
-              color='inherit'
-              onClick={handleUndo}
-              disabled={historyIndex === 0}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+              }}
             >
-              <UndoIcon />
-            </Button>
-            <Button
-              color='inherit'
-              onClick={handleRedo}
-              disabled={historyIndex === history.length - 1}
-            >
-              <RedoIcon />
-            </Button>
+              <Button
+                color='inherit'
+                onClick={handleUndo}
+                disabled={historyIndex === 0}
+                size='small'
+              >
+                <UndoIcon fontSize='small' />
+              </Button>
+              <Button
+                color='inherit'
+                onClick={handleRedo}
+                disabled={
+                  historyIndex === history.length - 1
+                }
+                size='small'
+              >
+                <RedoIcon fontSize='small' />
+              </Button>
+              <Button
+                color='inherit'
+                onClick={saveFeatureList}
+                size='small'
+              >
+                <SaveIcon fontSize='small' />
+              </Button>
+              <Button
+                color='inherit'
+                onClick={clearSavedFeatureLists}
+                size='small'
+              >
+                <ClearIcon fontSize='small' />
+              </Button>
+            </Box>
           </Toolbar>
         </AppBar>
         <List
@@ -242,6 +324,23 @@ export function Example() {
                   onClick={() => handleDeleteShape(index)}
                 >
                   <DeleteIcon />
+                </IconButton>
+              </ListItemSecondaryAction>
+            </ListItem>
+          ))}
+          {/* Add saved feature lists */}
+          {savedFeatureLists.map((_, index) => (
+            <ListItem key={`saved-list-${index}`}>
+              <ListItemText
+                primary={`Saved List ${index + 1}`}
+              />
+              <ListItemSecondaryAction>
+                <IconButton
+                  edge='end'
+                  aria-label='load'
+                  onClick={() => loadFeatureList(index)}
+                >
+                  <LoadIcon />
                 </IconButton>
               </ListItemSecondaryAction>
             </ListItem>
