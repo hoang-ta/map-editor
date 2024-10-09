@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "vite",
-    "start-local": "vite --config ../../vite.config.local.mjs"
+    "start-local": "vite --config ../../vite.config.local.mjs",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@deck.gl-community/editable-layers": "^9.0.0-alpha.1",
@@ -15,7 +17,8 @@
     "@deck.gl/layers": "^9.0.12",
     "@deck.gl/mesh-layers": "^9.0.12",
     "@deck.gl/react": "^9.0.12",
-    "@loaders.gl/core": "^4.2.0",
+    "@loaders.gl/core": "^4.2.5",
+    "@loaders.gl/las": "^4.2.5",
     "@loaders.gl/wkt": "^4.2.0",
     "@maphubs/tokml": "^0.6.1",
     "@tmcw/togeojson": "^3.2.0",
@@ -24,6 +27,7 @@
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.24",
     "@types/wellknown": "0.5.4",
+    "@vitejs/plugin-react": "^4.3.2",
     "boxicons": "^2.1.4",
     "clipboard-copy": "^3.2.0",
     "downloadjs": "^1.4.7",
