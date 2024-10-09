@@ -16,9 +16,17 @@ import { COORDINATE_SYSTEM } from '@deck.gl/core';
 import { parse } from '@loaders.gl/core';
 
 // Add these new imports
-import { Button } from '@mui/material';
+import {
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+} from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const initialViewState = {
   longitude: 139.7654711623127,
@@ -122,6 +130,23 @@ export function Example() {
     }
   };
 
+  const handleDeleteShape = (index: number) => {
+    const updatedFeatures = geoJson.features.filter(
+      (_, i) => i !== index
+    );
+    const updatedGeoJson = {
+      ...geoJson,
+      features: updatedFeatures,
+    };
+    setGeoJson(updatedGeoJson);
+
+    // Update history
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(updatedGeoJson);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
   return (
     <>
       <DeckGL
@@ -173,6 +198,38 @@ export function Example() {
         >
           <RedoIcon />
         </Button>
+      </div>
+
+      {/* Add shape list UI */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          width: '250px',
+          backgroundColor: 'white',
+          padding: '10px',
+          borderRadius: '5px',
+        }}
+      >
+        <List>
+          {geoJson.features.map((feature, index) => (
+            <ListItem key={index}>
+              <ListItemText
+                primary={`Shape ${index + 1}`}
+              />
+              <ListItemSecondaryAction>
+                <IconButton
+                  edge='end'
+                  aria-label='delete'
+                  onClick={() => handleDeleteShape(index)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </ListItemSecondaryAction>
+            </ListItem>
+          ))}
+        </List>
       </div>
 
       <Toolbox
