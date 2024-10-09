@@ -15,6 +15,11 @@ import {
 import { COORDINATE_SYSTEM } from '@deck.gl/core';
 import { parse } from '@loaders.gl/core';
 
+// Add these new imports
+import { Button } from '@mui/material';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+
 const initialViewState = {
   longitude: 139.7654711623127,
   latitude: 35.830900143089295,
@@ -38,13 +43,31 @@ export function Example() {
   const [mode, setMode] = useState(() => ViewMode);
   const [modeConfig, setModeConfig] = useState({});
 
+  // Add these new state variables
+  const [history, setHistory] = useState([data]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  // console.log('history', history);
+  // console.log('historyIndex', historyIndex);
+
   const layer = new EditableGeoJsonLayer({
     data: geoJson,
     mode,
     modeConfig,
     selectedFeatureIndexes,
-    onEdit: ({ updatedData }) => {
+    onEdit: ({ updatedData, editType }) => {
+      console.log('updatedData', updatedData, editType);
       setGeoJson(updatedData);
+
+      // Only update history when the edit is finished
+      if (editType === 'addFeature') {
+        const newHistory = history.slice(
+          0,
+          historyIndex + 1
+        );
+        newHistory.push(updatedData);
+        setHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+      }
     },
   });
 
@@ -84,6 +107,21 @@ export function Example() {
 
   // console.log('pcd layer', layers[0]);
 
+  // Add these new functions
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setGeoJson(history[historyIndex - 1]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+      setGeoJson(history[historyIndex + 1]);
+    }
+  };
+
   return (
     <>
       <DeckGL
@@ -114,6 +152,28 @@ export function Example() {
           }
         />
       </DeckGL>
+
+      {/* Add undo/redo buttons */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+        }}
+      >
+        <Button
+          onClick={handleUndo}
+          disabled={historyIndex === 0}
+        >
+          <UndoIcon />
+        </Button>
+        <Button
+          onClick={handleRedo}
+          disabled={historyIndex === history.length - 1}
+        >
+          <RedoIcon />
+        </Button>
+      </div>
 
       <Toolbox
         left={true}
