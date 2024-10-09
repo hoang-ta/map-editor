@@ -76,7 +76,11 @@ export type Props = {
 const MODE_GROUPS = [
   {
     modes: [
-      { mode: ViewMode, content: <Icon name='pointer' /> },
+      {
+        mode: ViewMode,
+        content: <Icon name='pointer' />,
+        tooltip: 'View Mode',
+      },
     ],
   },
   {
@@ -84,6 +88,7 @@ const MODE_GROUPS = [
       {
         mode: DrawPointMode,
         content: <Icon name='map-pin' />,
+        tooltip: 'Draw Point',
       },
     ],
   },
@@ -92,6 +97,7 @@ const MODE_GROUPS = [
       {
         mode: DrawLineStringMode,
         content: <Icon name='stats' />,
+        tooltip: 'Draw Line',
       },
     ],
   },
@@ -100,14 +106,17 @@ const MODE_GROUPS = [
       {
         mode: DrawPolygonMode,
         content: <Icon name='shape-polygon' />,
+        tooltip: 'Draw Polygon',
       },
       {
         mode: DrawRectangleMode,
         content: <Icon name='rectangle' />,
+        tooltip: 'Draw Rectangle',
       },
       {
         mode: DrawCircleFromCenterMode,
         content: <Icon name='circle' />,
+        tooltip: 'Draw Circle',
       },
     ],
   },
@@ -116,14 +125,17 @@ const MODE_GROUPS = [
       {
         mode: MeasureDistanceMode,
         content: <Icon name='ruler' />,
+        tooltip: 'Measure Distance',
       },
       {
         mode: MeasureAngleMode,
         content: <Icon name='shape-triangle' />,
+        tooltip: 'Measure Angle',
       },
       {
         mode: MeasureAreaMode,
         content: <Icon name='shape-square' />,
+        tooltip: 'Measure Area',
       },
     ],
   },
@@ -134,6 +146,7 @@ function ModeButton({ buttonConfig, mode, onClick }: any) {
     <Button
       active={buttonConfig.mode === mode}
       onClick={onClick}
+      title={buttonConfig.tooltip}
     >
       {buttonConfig.content}
     </Button>
