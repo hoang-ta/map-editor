@@ -25,33 +25,19 @@ import {
 } from '@deck.gl/core';
 import { parse } from '@loaders.gl/core';
 import { Matrix4 } from '@math.gl/core';
-
-// Add these new imports
 import {
-  Button,
   List,
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
   Drawer,
-  AppBar,
-  Toolbar,
-  Typography,
-  Box,
-  Slider,
 } from '@mui/material';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SaveIcon from '@mui/icons-material/Save';
 import LoadIcon from '@mui/icons-material/Refresh';
-import ClearIcon from '@mui/icons-material/Clear';
-
-// Add this new import
 import { v4 as uuidv4 } from 'uuid';
-
-// Update the getShapeName function
+import { RotationControl } from './components/rotation-control';
+import { AppBar } from './components/app-bar';
 function getShapeName(feature: any): string {
   if (feature.properties && feature.properties.shapeType) {
     return feature.properties.shapeType;
@@ -72,11 +58,9 @@ const initialViewState = {
   longitude: 139.7654711623127,
   latitude: 35.830900143089295,
   zoom: 17.8,
-  // zoom: 5.5,
 };
 
 // Data source: kaarta.com
-// const LAZ_SAMPLE = 'http://127.0.0.1:5500/indoor.0.1.laz';
 const LAZ_SAMPLE =
   'https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/point-cloud-laz/indoor.0.1.laz';
 
@@ -92,24 +76,27 @@ export function Example() {
   const [mode, setMode] = useState(() => ViewMode);
   const [modeConfig, setModeConfig] = useState({});
 
-  // Add these new state variables
   const [history, setHistory] = useState([data]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  // console.log('history', history);
-  // console.log('historyIndex', historyIndex);
 
-  // Add this new state variable
   const [drawerOpen, setDrawerOpen] = useState(true);
 
-  // Add new state for saved feature lists
+  // Add new state for saved feature lists to show on drawer
   const [savedFeatureLists, setSavedFeatureLists] =
     useState<string[]>([]);
 
-  // Add new state for rotation angles
+  // Add new state for rotation angles for editing point cloud
   const [rotation, setRotation] = useState({
     x: 0,
     y: 0,
     z: 0,
+  });
+
+  // Add view state to control the camera in 2d or 3d depending on the mode
+  const [viewState, setViewState] = useState<MapViewState>({
+    ...initialViewState,
+    bearing: 0,
+    pitch: 0,
   });
 
   // Load saved feature lists from local storage on component mount
@@ -121,12 +108,6 @@ export function Example() {
       setSavedFeatureLists(JSON.parse(savedLists));
     }
   }, []);
-
-  const [viewState, setViewState] = useState<MapViewState>({
-    ...initialViewState,
-    bearing: 0,
-    pitch: 0,
-  });
 
   // Add this useEffect to reset the bearing when switching out of view mode
   useEffect(() => {
@@ -143,8 +124,8 @@ export function Example() {
     setViewState(viewState);
   }, []);
 
-  const layer = new EditableGeoJsonLayer({
-    data: geoJson,
+  const editLayer = new EditableGeoJsonLayer({
+    data: geoJson as any,
     mode,
     modeConfig,
     selectedFeatureIndexes,
@@ -154,19 +135,6 @@ export function Example() {
       featureIndexes,
       editContext,
     }) => {
-      // console.log(
-      //   mode,
-      //   mode.name,
-      //   DrawCircleFromCenterMode.name
-      // );
-      // console.log(
-      //   'updatedData',
-      //   updatedData,
-      //   editType,
-      //   featureIndexes,
-      //   editContext
-      // );
-
       // Add shapeType and id properties to new features
       if (editType === 'addFeature') {
         const newFeatures = updatedData.features.map(
@@ -175,7 +143,6 @@ export function Example() {
               editContext?.featureIndexes?.includes(index)
             ) {
               let shapeType = getShapeName(feature);
-              // console.log('shapeType', shapeType);
               if (
                 mode.name === DrawCircleFromCenterMode.name
               ) {
@@ -218,7 +185,7 @@ export function Example() {
     },
   });
 
-  const layers = [
+  const pcdLayers = [
     pcd &&
       new PointCloudLayer<LASMesh>({
         id: 'sample-pcd',
@@ -243,24 +210,20 @@ export function Example() {
     const file = event.target.files?.[0];
     if (file) {
       const data = await parse(file, LASLoader);
-      // console.log('Loaded data:', data);
       setPcd(data);
     }
   };
 
-  const fetchData = async () => {
-    const response = await fetch(LAZ_SAMPLE);
+  const fetchPcdData = async () => {
     const data = await parse(fetch(LAZ_SAMPLE), LASLoader);
     setPcd(data);
   };
 
   useEffect(() => {
-    fetchData();
+    fetchPcdData();
   }, []);
 
-  // console.log('pcd layer', layers[0]);
-
-  // Add these new functions
+  // Add these new functions to handle undo and redo
   const handleUndo = () => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
@@ -319,7 +282,7 @@ export function Example() {
     setHistoryIndex(newHistory.length - 1);
   };
 
-  // Add this new function to clear saved feature lists
+  // Add this new function to clear saved feature lists from drawers
   const clearSavedFeatureLists = () => {
     setSavedFeatureLists([]);
     localStorage.removeItem('savedFeatureLists');
@@ -353,8 +316,8 @@ export function Example() {
           touchRotate: mode === ViewMode,
         }}
         onViewStateChange={onViewStateChange}
-        layers={[layer, ...layers]}
-        getCursor={layer.getCursor.bind(layer)}
+        layers={[editLayer, ...pcdLayers]}
+        getCursor={editLayer.getCursor.bind(editLayer)}
         onClick={(info) => {
           if (mode === ViewMode) {
             if (info) {
@@ -372,7 +335,7 @@ export function Example() {
         />
       </DeckGL>
 
-      {/* Add the drawer */}
+      {/* Add the drawer to show the list of shapes drawn on map and other controls */}
       <Drawer
         anchor='right'
         variant='persistent'
@@ -386,77 +349,17 @@ export function Example() {
           },
         }}
       >
-        <AppBar position='static'>
-          <Toolbar
-            sx={{
-              flexDirection: 'column',
-              alignItems: 'stretch',
-              py: 1,
-            }}
-          >
-            <Typography
-              variant='h6'
-              component='div'
-              sx={{ mb: 1 }}
-            >
-              Shapes
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 1,
-              }}
-            >
-              <Button
-                color='inherit'
-                onClick={handleUndo}
-                disabled={historyIndex === 0}
-                size='small'
-              >
-                <UndoIcon fontSize='small' />
-              </Button>
-              <Button
-                color='inherit'
-                onClick={handleRedo}
-                disabled={
-                  historyIndex === history.length - 1
-                }
-                size='small'
-              >
-                <RedoIcon fontSize='small' />
-              </Button>
-              <Button
-                color='inherit'
-                onClick={saveFeatureList}
-                size='small'
-              >
-                <SaveIcon fontSize='small' />
-              </Button>
-              <Button
-                color='inherit'
-                onClick={clearSavedFeatureLists}
-                size='small'
-              >
-                <ClearIcon fontSize='small' />
-              </Button>
-            </Box>
-            {/* Add the file input below the icons */}
-            <Box sx={{ width: '100%', mt: 1 }}>
-              <input
-                type='file'
-                accept='.laz,.las'
-                onChange={handleFileUpload}
-                style={{ width: '100%' }}
-                ref={fileInputRef}
-              />
-              <button onClick={clearPCDData}>
-                Clear PCD Data
-              </button>
-            </Box>
-          </Toolbar>
-        </AppBar>
+        <AppBar
+          handleUndo={handleUndo}
+          handleRedo={handleRedo}
+          saveFeatureList={saveFeatureList}
+          clearSavedFeatureLists={clearSavedFeatureLists}
+          clearPCDData={clearPCDData}
+          fileInputRef={fileInputRef}
+          historyIndex={historyIndex}
+          history={history}
+          handleFileUpload={handleFileUpload}
+        />
         <List
           sx={{
             overflow: 'auto',
@@ -481,7 +384,7 @@ export function Example() {
               </ListItemSecondaryAction>
             </ListItem>
           ))}
-          {/* Add saved feature lists */}
+          {/* Add saved feature lists to show list of shapes drawn on map */}
           {savedFeatureLists.map((_, index) => (
             <ListItem key={`saved-list-${index}`}>
               <ListItemText
@@ -519,43 +422,10 @@ export function Example() {
         }
         onSetGeoJson={setGeoJson}
       />
-
-      {/* Add rotation controls */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '20px',
-          backgroundColor: 'rgba(255, 255, 255, 0.7)',
-          padding: '10px',
-          borderRadius: '5px',
-        }}
-      >
-        <Typography gutterBottom>Rotate X</Typography>
-        <Slider
-          value={rotation.x}
-          onChange={handleRotationChange('x')}
-          min={0}
-          max={360}
-          valueLabelDisplay='auto'
-        />
-        <Typography gutterBottom>Rotate Y</Typography>
-        <Slider
-          value={rotation.y}
-          onChange={handleRotationChange('y')}
-          min={0}
-          max={360}
-          valueLabelDisplay='auto'
-        />
-        <Typography gutterBottom>Rotate Z</Typography>
-        <Slider
-          value={rotation.z}
-          onChange={handleRotationChange('z')}
-          min={0}
-          max={360}
-          valueLabelDisplay='auto'
-        />
-      </Box>
+      <RotationControl
+        rotation={rotation}
+        handleRotationChange={handleRotationChange}
+      />
     </>
   );
 }
