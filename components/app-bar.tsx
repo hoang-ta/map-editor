@@ -5,6 +5,7 @@ import {
   Toolbar,
   Typography,
   Box,
+  Tooltip,
 } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
@@ -46,36 +47,58 @@ export function AppBar({
             mb: 1,
           }}
         >
-          <Button
-            color='inherit'
-            onClick={handleUndo}
-            disabled={historyIndex === 0}
-            size='small'
+          <Tooltip title='Undo' placement='top' arrow>
+            <span>
+              <Button
+                color='inherit'
+                onClick={handleUndo}
+                disabled={historyIndex === 0}
+                size='small'
+              >
+                <UndoIcon fontSize='small' />
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip title='Redo' placement='top' arrow>
+            <span>
+              <Button
+                color='inherit'
+                onClick={handleRedo}
+                disabled={
+                  historyIndex === history.length - 1
+                }
+                size='small'
+              >
+                <RedoIcon fontSize='small' />
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip
+            title='Save data to local storage'
+            placement='top'
+            arrow
           >
-            <UndoIcon fontSize='small' />
-          </Button>
-          <Button
-            color='inherit'
-            onClick={handleRedo}
-            disabled={historyIndex === history.length - 1}
-            size='small'
+            <Button
+              color='inherit'
+              onClick={saveFeatureList}
+              size='small'
+            >
+              <SaveIcon fontSize='small' />
+            </Button>
+          </Tooltip>
+          <Tooltip
+            title='Clear saved data'
+            placement='top'
+            arrow
           >
-            <RedoIcon fontSize='small' />
-          </Button>
-          <Button
-            color='inherit'
-            onClick={saveFeatureList}
-            size='small'
-          >
-            <SaveIcon fontSize='small' />
-          </Button>
-          <Button
-            color='inherit'
-            onClick={clearSavedFeatureLists}
-            size='small'
-          >
-            <ClearIcon fontSize='small' />
-          </Button>
+            <Button
+              color='inherit'
+              onClick={clearSavedFeatureLists}
+              size='small'
+            >
+              <ClearIcon fontSize='small' />
+            </Button>
+          </Tooltip>
         </Box>
         <Box sx={{ width: '100%', mt: 1 }}>
           <input
