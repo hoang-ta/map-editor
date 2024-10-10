@@ -12,13 +12,18 @@ This repository contains a simple portfolio website that demonstrates the use of
 
 - Load and display a point cloud using a LAS file format
 - Remove the point cloud
+
+![input-pcd](images/input-pcd.gif)
+
 - Rotate the point cloud
+
+![Rotate-pcd](images/pcd.gif)
+
 - Note:
   - The demo point cloud is the data from this repository: https://deck.gl/examples/point-cloud-layer
   - The demo support LAS v1.3. It does not support LAS v1.4 files.
 
 ![Pcd features](images/pcd.png)
-![Rotate-pcd](images/pcd.gif)
 
 ### Mode
 
@@ -31,9 +36,12 @@ This repository contains a simple portfolio website that demonstrates the use of
 
 - On the right side is where users can view the list of shapes
 - Control history with undo, redo
-  ![Undo, redo](images/undo-redo.gif)
+
+![Undo, redo](images/undo-redo.gif)
+
 - Save the edit to local storage of browser or remove the local storage
-  ![Storage](images/storage.gif)
+
+![Storage](images/storage.gif)
 
 ## Scenario
 
