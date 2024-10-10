@@ -53,7 +53,8 @@ This repository contains a simple portfolio website that demonstrates the use of
 1. `cd map-editor`
 1. `npm install`
 1. `npm start`
-   - Default start on http://localhost:5173/
+   - Default start on http://localhost:5173/, or you can check the console for the local port
+     ![port](images/port.png)
    - Use different port , example: port 3000 `npm start -- --port 3000`
 
 ### Use docker
